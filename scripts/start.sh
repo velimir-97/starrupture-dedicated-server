@@ -24,8 +24,19 @@ echo " "
 echo "Installing/Updating StarRupture Dedicated Server files..."
 echo " "
 
-$steamcmd +@sSteamCmdForcePlatformType windows +force_install_dir "$server_files" +login anonymous +app_update 3809400 validate +quit
-exit_code=$?
+for attempt in $(seq 1 5); do
+  $steamcmd +@sSteamCmdForcePlatformType windows +force_install_dir "$server_files" +login anonymous +app_update 3809400 validate +quit
+  exit_code=$?
+
+  [ -f "$server_files/StarRupture/Binaries/Win64/StarRuptureServerEOS-Win64-Shipping.exe" ] && break ;
+
+  if [ "$attempt" -eq 5 ]; then
+    echo "Failed to install server executable after 5 attempts, exiting with exit code: $exit_code."
+    exit
+  fi
+
+  echo "Attempt $attempt/5: executable not found after steamcmd, retrying..."
+done
 
 if [ $exit_code -ne 0 ]; then
   echo " "
